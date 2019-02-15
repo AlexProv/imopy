@@ -2,4 +2,6 @@ flask==1.0.2
 requests==2.21.0
 google-cloud-bigquery==1.9.0
 google-cloud-firestore==0.31.0
-selenium==3.141.0 
+selenium==3.141.0,
+firebase-admin==2.15.1,
+grpcio==1.18.0
