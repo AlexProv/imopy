@@ -7,20 +7,21 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 
-from FirestoreWorker import FirestoreWorker
+import FirestoreWorker as FW
 from Models import House
 
 CHROMEDRIVER_PATH = '/Users/alexprovencher/Desktop/imopy/chromedriver'
 
 cities = ['Rosemère', 'Sainte-Thèrese', 'Blainville', 'Terrebonne', 'Bois-des-filion',
-          'boisbriand']
+          'boisbriand', 'loraine']
 
 class CentrisScrapper:
-    pre_text = ''
+
     workers = []
 
     def __init__(self, cities):
         self.last_page = False
+        self.pre_text = ''
         self.options = Options()
         # self.options.headless = True
         self.options.add_argument('incognito')
@@ -29,14 +30,14 @@ class CentrisScrapper:
         self.centris_url = 'https://www.centris.ca/en'
         CentrisScrapper.workers.append(self)
 
-    @staticmethod
-    async def wait_load(elem):
+
+    async def wait_load(self, elem):
         if elem.is_displayed():
-            CentrisScrapper.pre_text = elem.get_attribute('innerHTML')
+            self.pre_text = elem.get_attribute('innerHTML')
             return True
         else:
             await asyncio.sleep(0.01)
-            await CentrisScrapper.wait_load(elem)
+            await self.wait_load(elem)
 
 
     async def add_search_params(self):
@@ -108,7 +109,7 @@ class CentrisScrapper:
         features.update(self.get_features(features__elem_b.text))
         features = self.format_features(features)
 
-        FirestoreWorker.houses_crawled.append(House(
+        FW.FirestoreWorker.houses_crawled.append(House(
             marketDate=datetime.today(), sellingPrice=buy_price, salesUrl=self.driver.current_url,
             city=city, neighbourhood=neighbourhood, street=street, civicNumber=civic_number,
             lat=lat, lng=lng, rooms=rooms, bedrooms=bedrooms, bedroomsAbove=bedrooms_above,

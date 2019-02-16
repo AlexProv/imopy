@@ -37,7 +37,7 @@ class House(object):
                 civicNumber=None, yearBuilt=None, lat=None, lng=None,
                 basement=None, rooms=None, houseSize=None, bedrooms=None,
                 bedroomsAbove=None, bedroomsBasement=None, bathrooms=None, toilet=None, features=None,
-                Sold=False):
+                Sold=False, **kwargs):
        pass
 
     @staticmethod
