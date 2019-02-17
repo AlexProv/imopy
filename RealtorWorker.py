@@ -2,7 +2,7 @@
 
 import requests
 import calendar
-from datetime import date
+from datetime import date, timedelta
 
 from urllib.parse import urlencode
 from google.cloud import firestore
@@ -29,7 +29,12 @@ class RealtorWorker:
         else:
             raise Exception('Future date {}'.format(target_date))
 
-    def monthly_houses(self, month, year=date.today().year):
+    def monthly_houses(self, month, year=date.today().year, inner_call=False):
+        if not inner_call:
+            day_afther = date.today() + timedelta(days=-1)
+            self.daily_houses(day_afther)
+            self.results = {}
+
         nb_days = calendar.monthrange(year, month)[1]
 
         days = [date(year, month, day) for day in range(1, nb_days + 1)]
@@ -41,10 +46,14 @@ class RealtorWorker:
                 self.daily_houses(day)
 
     def yearly_houses(self, year):
-        months = [i for i in range(1,12)]
+        day_afther = date(year+1, 1, 1)
+        self.daily_houses(day_afther)
+        self.results = {}
+
+        months = [i for i in range(1,13)]
         months.reverse()
         for m in months:
-            self.monthly_houses(m, year)
+            self.monthly_houses(m, year, inner_call=True)
 
     def _get_houses(self, day):
         self.payload.NumberOfDays = day
@@ -148,6 +157,6 @@ class Payload():
 
 
 rw = RealtorWorker()
-rw.yearly_houses(2017)
-rw.save_db()
+rw.yearly_houses(2018)
+# rw.save_db()
 print(rw.results)

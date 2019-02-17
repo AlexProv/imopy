@@ -1,4 +1,6 @@
 
+
+from datetime import date
 from google.cloud import bigquery, firestore
 
 bg_client = bigquery.Client()
@@ -39,31 +41,32 @@ class RealtorBigQueryWorker():
         errors = self.bg_client.insert_rows(self.table, rows)
         return errors
 
-    def get_all_data(self):
+    def get_all_data(self, date_cutoff=date.today()):
         rows = []
         dates = list(map(lambda x: x, self.houses.get()))
-        for date in dates:
-            date_houses_ref = date._reference.collection('houses')
-            date_houses = list(map(lambda x: x, date_houses_ref.get()))
-            for house in date_houses:
-                house_data = house.to_dict()
-                row = [date.id,
-                       house_data['Id'],
-                       int(float(house_data['Building']['BathroomTotal'])),
-                       int(float(self.get_safe(['Building', 'Bedrooms'], data=house_data, default=1))),
-                       int(float((self.get_safe(['Building', 'StoriesTotal'], data=house_data, default=1)))),
-                       self.get_safe(['Building','Type'], data=house_data) or 'N/A',
-                       self.get_safe(['Land', 'SizeFrontage'], data=house_data) or 'N/A',
-                       self.get_size(self.get_safe(['Land', 'SizeTotal'], data=house_data, default=0)),
-                       house_data['PostalCode'],
-                       house_data['Property']['Address']['AddressText'],
-                       float(house_data['Property']['Address']['Longitude']),
-                       float(house_data['Property']['Address']['Latitude']),
-                       int(float(self.has_garage(self.get_safe(['Property', 'Parking'], data=house_data)))),
-                       int(float(self.get_safe(['Property', 'ParkingSpaceTotal'], data=house_data, default=0))),
-                       int(float(self.get_price(house_data['Property']['Price'])))
-                       ]
-                rows.append(row)
+        for date_i in dates:
+            if date(*list(map(lambda x:int(x), date_i.id.split('-')))) >= date_cutoff:
+                date_houses_ref = date_i._reference.collection('houses')
+                date_houses = list(map(lambda x: x, date_houses_ref.get()))
+                for house in date_houses:
+                    house_data = house.to_dict()
+                    row = [date_i.id,
+                           house_data['Id'],
+                           int(float(house_data['Building']['BathroomTotal'])),
+                           int(float(self.get_safe(['Building', 'Bedrooms'], data=house_data, default=1))),
+                           int(float((self.get_safe(['Building', 'StoriesTotal'], data=house_data, default=1)))),
+                           self.get_safe(['Building','Type'], data=house_data) or 'N/A',
+                           self.get_safe(['Land', 'SizeFrontage'], data=house_data) or 'N/A',
+                           self.get_size(self.get_safe(['Land', 'SizeTotal'], data=house_data, default=0)),
+                           house_data['PostalCode'],
+                           house_data['Property']['Address']['AddressText'],
+                           float(house_data['Property']['Address']['Longitude']),
+                           float(house_data['Property']['Address']['Latitude']),
+                           int(float(self.has_garage(self.get_safe(['Property', 'Parking'], data=house_data)))),
+                           int(float(self.get_safe(['Property', 'ParkingSpaceTotal'], data=house_data, default=0))),
+                           int(float(self.get_price(house_data['Property']['Price'])))
+                           ]
+                    rows.append(row)
 
         self.rows = rows
         print(rows)
@@ -117,7 +120,7 @@ class RealtorBigQueryWorker():
 
 
 worker = RealtorBigQueryWorker()
-worker.get_all_data()
+worker.get_all_data(date_cutoff=date(2019, 1, 1))
 worker.save_bigquery(worker.rows)
 # client = bigquery.Client()
 # dataset_id = 'my_dataset'  # replace with your dataset ID
