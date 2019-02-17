@@ -22,7 +22,8 @@ def injectArguments(inFunction):
 
         # Add default value for non-specified arguments
         nb_defaults = len(_names) - len(_values)
-        _self.__dict__.update(zip(_names[-nb_defaults:], inFunction.__defaults__[-nb_defaults:]))
+        if nb_defaults > 0:
+            _self.__dict__.update(zip(_names[-nb_defaults:], inFunction.__defaults__[-nb_defaults:]))
 
         return inFunction(*args,**kwargs)
 
@@ -38,7 +39,8 @@ class House(object):
                 basement=None, rooms=None, houseSize=None, bedrooms=None,
                 bedroomsAbove=None, bedroomsBasement=None, bathrooms=None, toilet=None, features=None,
                 Sold=False, **kwargs):
-       pass
+        pass
+
 
     @staticmethod
     def from_dict(source):
@@ -49,3 +51,5 @@ class House(object):
 
     def __repr__(self):
         return self.to_dict()
+
+
