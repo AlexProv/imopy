@@ -22,7 +22,7 @@ class RealtorWorker:
         self.payload = Payload.create_payload()
 
     def daily_houses(self, target_date):
-        if target_date < date.today():
+        if target_date < date.today() + timedelta(days=1):
             delta = date.today() - target_date
             results = self._get_houses(delta.days)
             self.results[str(target_date)] = results
@@ -46,7 +46,7 @@ class RealtorWorker:
                 self.daily_houses(day)
 
     def yearly_houses(self, year):
-        day_afther = date(year+1, 1, 1)
+        day_afther = date.today() + timedelta(days=-1)
         self.daily_houses(day_afther)
         self.results = {}
 
@@ -158,5 +158,5 @@ class Payload():
 
 rw = RealtorWorker()
 rw.yearly_houses(2018)
-# rw.save_db()
+rw.save_db()
 print(rw.results)
