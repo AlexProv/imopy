@@ -171,5 +171,3 @@ class CentrisScrapper:
         while(not self.last_page):
             self.crawler()
             await self.get_next_house()
-
-

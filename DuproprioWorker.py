@@ -7,13 +7,28 @@ from  datetime import datetime
 def runner(test):
     asyncio.run(test)
 
+def gather_urls(dp, db):
+    runner(dp.hit_search())
+    runner(dp.crawler())
+    db.collection('duproprio-urls').document(str(datetime.now())).set({'urls': json.dumps(dp.search_results)})
 
-loop = asyncio.get_event_loop()
+def gather_all_urls():
+    dp_worker = DS.DuproprioScrapper(cities=DS.cities)
+    gather_urls(dp_worker, firestore.Client())
 
-dp_worker = DS.DuproprioScrapper(DS.cities)
-runner(dp_worker.hit_search())
-runner(dp_worker.crawler())
+def crawl_urls():
+    db = firestore.Client()
+    urls_gen = db.collection('duproprio-urls').get()
+    urls = {}
+    for url in urls_gen:
+        urls[datetime.strptime(url.id, '%Y-%m-%d %H:%M:%S.%f')] = url.to_dict()
 
+    latest = sorted(urls, reverse=True)[0]
+    latest_urls = urls[latest]['urls']
 
-db = firestore.Client()
-db.collection('duproprio-urls').document('urls').set({str(datetime.now()):json.dumps(dp_worker.search_results)})
+    urls = list(map(lambda x: x.replace('"', '').replace(' ', ''), latest_urls[1:-2].split(',')))
+
+    dp_worker = DS.DuproprioScrapper(start_url=urls.pop())
+    dp_worker.page_crawler(urls)
+
+crawl_urls()
