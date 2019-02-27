@@ -1,16 +1,13 @@
-import asyncio
 from google.cloud import firestore
 import DuproprioScraper as DS
 import json
 from  datetime import datetime
 import argparse
 
-def runner(test):
-    asyncio.run(test)
 
 def gather_urls(dp, db):
-    runner(dp.hit_search())
-    runner(dp.crawler())
+    dp.hit_search()
+    dp.crawler()
     db.collection('duproprio-urls').document(str(datetime.now())).set({'urls': json.dumps(dp.search_results)})
 
 def gather_all_urls():
@@ -39,4 +36,7 @@ args = parser.parse_args()
 if args.run == 'url-scan':
     gather_all_urls()
 elif args.run == 'url-crawl':
+    crawl_urls()
+elif args.run == 'full-scan':
+    gather_all_urls()
     crawl_urls()

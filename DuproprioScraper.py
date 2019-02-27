@@ -1,18 +1,17 @@
-
-import asyncio
-from datetime import datetime, date
+import os, sys
+from datetime import date
 from selenium import webdriver
 
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
-from FirestoreWorker import FirestoreWorker
-from Models import House
-
 from google.cloud import firestore
 
-CHROMEDRIVER_PATH = '/Users/alexprovencher/Desktop/imopy/chromedriver'
+# CHROMEDRIVER_PATH = '/Users/alexprovencher/Desktop/imopy/chromedriver'
+
+try:
+   CHROMEDRIVER_PATH = os.environ["WEBDRIVER_PATH"]
+except KeyError:
+   sys.exit(1)
 
 cities = ['Rosemère', 'Sainte-Thèrese', 'Blainville', 'Terrebonne', 'Bois-des-filion',
           'boisbriand', 'loraine']
@@ -48,38 +47,38 @@ class DuproprioScrapper:
         self.search_results = []
         self.houses = {}
 
-    async def hit_search(self):
+        page_state = self.driver.execute_script('return document.readyState;')
+
+    def hit_search(self):
         try:
             self.driver.find_element_by_class_name('gtm-header-link-search-bar-button ').click()
         except:
-            await asyncio.sleep(0.1)
-            await self.hit_search()
+            self.hit_search()
 
 
-    async def get_page_result(self):
+    def get_page_result(self):
         try:
             return self.driver.find_element_by_class_name('search-results-listings-list')
         except:
-            await asyncio.sleep(0.1)
-            return await self.get_page_result()
+            return self.get_page_result()
 
 
-    async def process_page(self):
-        self.page_result = await self.get_page_result()
+    def process_page(self):
+        self.page_result = self.get_page_result()
         elems = self.page_result.find_elements(By.TAG_NAME, 'li')
         for e in elems:
-            href = await asyncio.wait_for(self.get_href(e), 60)
+            href = self.get_href(e)
             if href is not None:
                 self.search_results.append(href)
             else:
                 debug = e.get_attribute('innerHTML')
                 print(debug)
 
-    async def crawl(self):
-        await self.process_page()
+    def crawl(self):
+        self.process_page()
         next_btn = None
         try:
-            next_btn = await asyncio.wait_for(self.get_next_btn(), 15)
+            next_btn = self.get_next_btn()
         except:
             self.end_page = True
         try:
@@ -88,36 +87,28 @@ class DuproprioScrapper:
                 popup.click()
             except:
                 pass
-            await asyncio.wait_for(self.click_next(next_btn), 60)
+            self.click_next(next_btn)
 
         except Exception as e:
             print('crawl problems')
             print(e)
 
-    async def click_next(self, btn):
-        try:
-            btn.click()
-        except:
-            await asyncio.sleep(0.1)
-            return await self.click_next(btn)
+    def click_next(self, btn):
+        btn.click()
+        page_state = self.driver.execute_script('return document.readyState;')
 
-    async def crawler(self):
-
+    def crawler(self):
         self.end_page = False
         while not self.end_page:
             print('crawling {}'.format(self.driver.current_url))
-            await self.crawl()
+            self.crawl()
 
-    async def get_next_btn(self):
-        try:
-            return self.driver\
+    def get_next_btn(self):
+        return self.driver\
                 .find_element_by_class_name('pagination__arrow--right')\
                 .find_element_by_class_name('gtm-search-results-link-pagination-arrow ')
-        except:
-            await asyncio.sleep(0.1)
-            return await self.get_next_btn()
 
-    async def get_href(self, elem):
+    def get_href(self, elem):
         try:
             return elem.find_element_by_class_name(
                 'search-results-listings-list__item-bottom-container').find_element(
@@ -127,8 +118,7 @@ class DuproprioScrapper:
                 if 'listing' not in elem.get_attribute('id'):
                     return
             except:
-                await asyncio.sleep(0.1)
-                return await self.get_href(elem)
+                return self.get_href(elem)
 
     def page_crawl(self):
         page_state = self.driver.execute_script('return document.readyState;')

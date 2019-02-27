@@ -157,6 +157,6 @@ class Payload():
 
 
 rw = RealtorWorker()
-rw.yearly_houses(2018)
+rw.monthly_houses(2)
 rw.save_db()
 print(rw.results)
