@@ -3,6 +3,7 @@ from google.cloud import firestore
 import DuproprioScraper as DS
 import json
 from  datetime import datetime
+import argparse
 
 def runner(test):
     asyncio.run(test)
@@ -31,4 +32,11 @@ def crawl_urls():
     dp_worker = DS.DuproprioScrapper(start_url=urls.pop())
     dp_worker.page_crawler(urls)
 
-crawl_urls()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--run', help='mode: url-scan, url-crawl')
+args = parser.parse_args()
+if args.run == 'url-scan':
+    gather_all_urls()
+elif args.run == 'url-crawl':
+    crawl_urls()
