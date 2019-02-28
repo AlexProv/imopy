@@ -160,6 +160,6 @@ rw = RealtorWorker()
 parser = argparse.ArgumentParser()
 parser.add_argument('--run', help='mode: current_month')
 args = parser.parse_args()
-if args.run == 'full-scan':
+if args.run == 'current_month':
     rw.monthly_houses(date.today().month)
     rw.save_db()
