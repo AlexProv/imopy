@@ -23,9 +23,11 @@ class DuproprioScrapper:
     def __init__(self, cities=None, start_url=None):
         self.last_page = False
         self.options = Options()
-        # self.options.headless = True
+        self.options.headless = True
+
         self.options.add_argument('incognito')
         self.driver = webdriver.Chrome(CHROMEDRIVER_PATH, chrome_options=self.options)
+        self.driver.set_window_size(1080, 1920)
         self.cities = cities
         self.duproprio_url = 'https://duproprio.com/en'
         self.duproprio_search_url = """https://duproprio.com/en/search/list?search=true&
@@ -50,9 +52,17 @@ class DuproprioScrapper:
         page_state = self.driver.execute_script('return document.readyState;')
 
     def hit_search(self):
+        page_state = self.driver.execute_script('return document.readyState;')
+        self.driver.get_screenshot_as_file('/Users/alexprovencher/Desktop/Tester.png')
         try:
             self.driver.find_element_by_class_name('gtm-header-link-search-bar-button ').click()
-        except:
+        except Exception as e:
+            print(e)
+            try:
+                popup = self.driver.find_element_by_class_name('info-sessions-popup__close-icon')
+                popup.click()
+            except Exception as e:
+                print(e)
             self.hit_search()
 
 
@@ -102,6 +112,7 @@ class DuproprioScrapper:
         while not self.end_page:
             print('crawling {}'.format(self.driver.current_url))
             self.crawl()
+        self.driver.close()
 
     def get_next_btn(self):
         return self.driver\
