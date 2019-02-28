@@ -23,7 +23,7 @@ class DuproprioScrapper:
     def __init__(self, cities=None, start_url=None):
         self.last_page = False
         self.options = Options()
-        self.options.headless = True
+        # self.options.headless = True
 
         self.options.add_argument('incognito')
         self.driver = webdriver.Chrome(CHROMEDRIVER_PATH, chrome_options=self.options)
