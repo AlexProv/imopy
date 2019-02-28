@@ -106,6 +106,7 @@ class DuproprioScrapper:
     def click_next(self, btn):
         btn.click()
         page_state = self.driver.execute_script('return document.readyState;')
+        print('\n crawling next page {} \n \n'.format(self.driver.current_url))
 
     def crawler(self):
         self.end_page = False
@@ -133,6 +134,7 @@ class DuproprioScrapper:
 
     def page_crawl(self):
         page_state = self.driver.execute_script('return document.readyState;')
+        print('crawling page {}'.format(self.driver.current_url))
 
         price = self.driver.find_element_by_xpath("//meta[@property='price']").get_property('content')
         price_currency = self.driver.find_element_by_xpath("//meta[@property='priceCurrency']").get_property('content')
@@ -200,8 +202,10 @@ class DuproprioScrapper:
                     house_ref.update(features)
                 else:
                     house_ref.set(features)
-            except:
+            except Exception as e:
                 print('problem with {}'.format(self.driver.current_url))
+                print(e)
+                print()
 
             self.driver.get(url)
 
