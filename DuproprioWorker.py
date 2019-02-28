@@ -38,5 +38,7 @@ if args.run == 'url-scan':
 elif args.run == 'url-crawl':
     crawl_urls()
 elif args.run == 'full-scan':
+    print('gatering urls')
     gather_all_urls()
+    print('\n CRAWLING START \n \n \n')
     crawl_urls()
