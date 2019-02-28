@@ -2,6 +2,7 @@
 
 import requests
 import calendar
+import argparse
 from datetime import date, timedelta
 
 from urllib.parse import urlencode
@@ -155,8 +156,10 @@ class Payload():
         return urlencode(self.__dict__)
 
 
-
 rw = RealtorWorker()
-rw.monthly_houses(2)
-rw.save_db()
-print(rw.results)
+parser = argparse.ArgumentParser()
+parser.add_argument('--run', help='mode: current_month')
+args = parser.parse_args()
+if args.run == 'full-scan':
+    rw.monthly_houses(date.today().month)
+    rw.save_db()
