@@ -27,7 +27,7 @@ class DuproprioScrapper:
         self.last_page = False
         self.options = Options()
         self.options.headless = True
-
+        #
         self.options.add_argument('incognito')
         self.driver = webdriver.Chrome(CHROMEDRIVER_PATH, chrome_options=self.options)
         self.driver.set_window_size(1080, 1920)
@@ -232,6 +232,7 @@ class DuproprioScrapper:
 
     def crawl_new_urls(self):
         first_url = self.latest_urls_records.pop()
+        # self.driver.close()
         self.driver.get(first_url)
         page_state = self.driver.execute_script('return document.readyState;')
         self.page_crawler(self.latest_urls_records)
@@ -245,8 +246,9 @@ class DuproprioScrapper:
             urls[datetime.strptime(url.id, '%Y-%m-%d %H:%M:%S.%f')] = url.to_dict()
 
         try:
-            latest_key = sorted(urls).pop()
-            latest_urls = urls.pop(latest_key)['urls']
+            latest_key = sorted(urls, reverse=True)[0]
+            latest_urls = urls[latest_key]['urls']
+            urls.pop(latest_key)
 
             self.urls_records = set()
             for k, v in urls.items():
