@@ -26,7 +26,7 @@ class DuproprioScrapper:
     def __init__(self, cities=None, start_url=None):
         self.last_page = False
         self.options = Options()
-        self.options.headless = True
+        # self.options.headless = True
         #
         self.options.add_argument('incognito')
         self.driver = webdriver.Chrome(CHROMEDRIVER_PATH, chrome_options=self.options)
@@ -207,9 +207,8 @@ class DuproprioScrapper:
 
     def page_crawler(self, urls):
         for url in urls:
-            id, features = self.page_crawl()
-
             try:
+                id, features = self.page_crawl()
                 # save to database, will need to reformat for multiple workers later
                 date_ref = self.db.collection('DuproprioHouses').document(str(date.today()))
                 if not date_ref.get().exists:
