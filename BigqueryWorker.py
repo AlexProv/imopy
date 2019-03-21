@@ -5,8 +5,6 @@ from google.cloud import bigquery, firestore
 
 bg_client = bigquery.Client()
 
-query = 'select * from `imopy-analytics.housing.houses`'
-
 shema = [
     {"name": "date", "type": "DATE"},
     {"name": "id", "type": "STRING"},
@@ -50,10 +48,13 @@ class RealtorBigQueryInjector():
                 date_houses = list(map(lambda x: x, date_houses_ref.get()))
                 for house in date_houses:
                     house_data = house.to_dict()
+                    bedrooms = self.get_safe(['Building', 'Bedrooms'], data=house_data, default=1)
+                    if type(bedrooms) is str and '+' in bedrooms:
+                        bedrooms = eval(bedrooms)
                     row = [date_i.id,
                            house_data['Id'],
                            int(float(house_data['Building']['BathroomTotal'])),
-                           int(float(self.get_safe(['Building', 'Bedrooms'], data=house_data, default=1))),
+                           int(float(bedrooms)),
                            int(float((self.get_safe(['Building', 'StoriesTotal'], data=house_data, default=1)))),
                            self.get_safe(['Building','Type'], data=house_data) or 'N/A',
                            self.get_safe(['Land', 'SizeFrontage'], data=house_data) or 'N/A',
@@ -64,12 +65,11 @@ class RealtorBigQueryInjector():
                            float(house_data['Property']['Address']['Latitude']),
                            int(float(self.has_garage(self.get_safe(['Property', 'Parking'], data=house_data)))),
                            int(float(self.get_safe(['Property', 'ParkingSpaceTotal'], data=house_data, default=0))),
-                           int(float(self.get_price(house_data['Property']['Price'])))
+                           int(float(self.get_price(house_data['Property']['Price'].replace(',',''))))
                            ]
                     rows.append(row)
 
-        self.rows = rows
-        print(rows)
+        return rows
 
     def get_safe(self, keys, data={}, default=None):
         try:
@@ -109,11 +109,6 @@ class RealtorBigQueryInjector():
         elif 'pi2' in size_str:
             size = float(size_str.replace('pi2', ''))
         elif 'X' in size_str:
-            # a,b = size_str.split('X')
-            # a = float(a[0])
-            # b = float(b[0].replace('irr', ''))
-            #
-            # size = a * b * 10.764
             size = 0
 
         return int(size)
@@ -214,25 +209,13 @@ class DuproprioBigQueryInjector():
                     ]
 
                     rows.append(row)
-                print(rows)
+        return rows
 
-# worker = RealtorBigQueryWorker()
-worker = DuproprioBigQueryInjector()
-worker.get_all_data(date_cutoff=date(2019, 1, 1))
-# worker.save_bigquery(worker.rows)
 
-# client = bigquery.Client()
-# dataset_id = 'my_dataset'  # replace with your dataset ID
-# For this sample, the table must already exist and have a defined schema
-# table_id = 'my_table'  # replace with your table ID
-# table_ref = client.dataset(dataset_id).table(table_id)
-# table = client.get_table(table_ref)  # API request
-#
-# rows_to_insert = [
-#     (u'Phred Phlyntstone', 32),
-#     (u'Wylma Phlyntstone', 29),
-# ]
-#
-# errors = client.insert_rows(table, rows_to_insert)  # API request
-#
-# assert errors == []
+# workerDuproprio = DuproprioBigQueryInjector()
+# rows = workerDuproprio.get_all_data(date_cutoff=date(2019, 1, 1))
+# workerDuproprio.save_bigquery(rows)
+
+workerRealtor = RealtorBigQueryInjector()
+rows = workerRealtor.get_all_data(date_cutoff=date(2019, 2, 16))
+workerRealtor.save_bigquery(rows)
